@@ -1,0 +1,222 @@
+import React, { useState, useEffect } from 'react';
+import { GripVertical } from 'lucide-react';
+
+const ToxinsGame = () => {
+  const toxinsData = [
+    { toxin: "ACO Cumarínicos", antidote: "Vitamina K (filoquinona)" },
+    { toxin: "Anticolinérgicos", antidote: "Fisostigmina" },
+    { toxin: "Antagonistas de canales de calcio", antidote: "Gluconato cálcico o Cloruro de calcio" },
+    { toxin: "Antidepresivos tricíclicos", antidote: "Bicarbonato sódico" },
+    { toxin: "Benzodiazepinas", antidote: "Flumazenilo" },
+    { toxin: "β-bloqueantes", antidote: "Glucagón" },
+    { toxin: "Cianuro", antidote: "Hidroxicobalamina (Vit. B12)" },
+    { toxin: "Dabigatrán", antidote: "Idarucizumab" },
+    { toxin: "Digoxina", antidote: "Anticuerpos antidigital (Fab antidigoxina)" },
+    { toxin: "Heparina", antidote: "Sulfato de protamina" },
+    { toxin: "Hierro", antidote: "Desferoxamina" },
+    { toxin: "Insecticidas organofosforados", antidote: "Atropina + Pralidoximina" },
+    { toxin: "Isoniazida", antidote: "Piridoxina (Vit. B6)" },
+    { toxin: "Metahemoglobinizantes", antidote: "Azul de metileno" },
+    { toxin: "Metanol y etilenglicol", antidote: "Etanol o Fomepizol" },
+    { toxin: "Monóxido de carbono", antidote: "Oxígeno" },
+    { toxin: "Opiáceos", antidote: "Naloxona" },
+    { toxin: "Paracetamol", antidote: "N-Acetilcisteína" },
+    { toxin: "Plomo, arsénico, oro, mercurio, antimonio y bismuto", antidote: "Dimercaprol" },
+    { toxin: "Rivaroxabán, Apixabán", antidote: "Andexanet" },
+    { toxin: "Setas con amatinas", antidote: "Penicilina G o Silibinina" },
+    { toxin: "Veneno de víbora", antidote: "Suero antiofídico" }
+  ];
+
+  const [antidotes, setAntidotes] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState(false);
+  const [score, setScore] = useState(0);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [draggedOverIndex, setDraggedOverIndex] = useState(null);
+
+  useEffect(() => {
+    shuffleAntidotes();
+  }, []);
+
+  const shuffleAntidotes = () => {
+    const shuffled = [...toxinsData].map(item => ({
+      id: Math.random().toString(36).substr(2, 9),
+      antidote: item.antidote
+    }));
+    shuffled.sort(() => Math.random() - 0.5);
+    setAntidotes(shuffled);
+    setShowResults(false);
+    setShowCorrectAnswers(false);
+    setScore(0);
+  };
+
+  const handleDragStart = (e, item, index) => {
+    setDraggedItem({ item, index });
+    e.currentTarget.classList.add('opacity-50');
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.classList.remove('opacity-50');
+    setDraggedOverIndex(null);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    setDraggedOverIndex(index);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedItem === null) return;
+
+    const newAntidotes = [...antidotes];
+    const [removed] = newAntidotes.splice(draggedItem.index, 1);
+    newAntidotes.splice(dropIndex, 0, removed);
+    setAntidotes(newAntidotes);
+    setDraggedItem(null);
+    setDraggedOverIndex(null);
+  };
+
+  const checkAnswers = () => {
+    let correctCount = 0;
+    toxinsData.forEach((item, index) => {
+      if (antidotes[index].antidote === item.antidote) {
+        correctCount++;
+      }
+    });
+    setScore(correctCount);
+    setShowResults(true);
+  };
+
+  const isCorrect = (index) => {
+    return antidotes[index].antidote === toxinsData[index].antidote;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8 px-4">
+      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="p-6 bg-white border-b">
+          <h1 className="text-2xl font-bold text-center text-gray-800">
+            Juego de Tóxicos y Antídotos
+          </h1>
+          <p className="text-center text-gray-600 mt-2">
+            Arrastra los antídotos para emparejarlos con sus tóxicos correspondientes
+          </p>
+        </div>
+
+        {/* Controls */}
+        <div className="p-4 bg-gray-50 border-b flex flex-wrap justify-center gap-4">
+          <button
+            onClick={shuffleAntidotes}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Reiniciar
+          </button>
+          <button
+            onClick={checkAnswers}
+            disabled={showResults}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+          >
+            Comprobar Respuestas
+          </button>
+          {showResults && (
+            <button
+              onClick={() => setShowCorrectAnswers(!showCorrectAnswers)}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+            >
+              {showCorrectAnswers ? 'Ocultar Soluciones' : 'Ver Soluciones'}
+            </button>
+          )}
+        </div>
+
+        {/* Score */}
+        {showResults && (
+          <div className="p-4 bg-gray-50 border-b text-center">
+            <div className="text-xl font-semibold">
+              Puntuación: {score} de {toxinsData.length} correctas
+            </div>
+          </div>
+        )}
+
+        {/* Game Container */}
+        <div className="p-6">
+          <div className="flex flex-row gap-6">
+            {/* Fixed Width Toxins Column */}
+            <div className="w-1/2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+              <div className="font-semibold text-lg mb-4 text-center text-gray-700 sticky top-0 bg-white py-2">
+                Tóxicos
+              </div>
+              <div className="space-y-2">
+                {toxinsData.map((item, index) => (
+                  <div
+                    key={item.toxin}
+                    className="p-3 border rounded-lg bg-gray-50 shadow-sm"
+                  >
+                    {item.toxin}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scrollable Antidotes Column */}
+            <div className="w-1/2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+              <div className="font-semibold text-lg mb-4 text-center text-gray-700 sticky top-0 bg-white py-2">
+                Antídotos
+              </div>
+              <div className="space-y-2">
+                {antidotes.map((item, index) => (
+                  <div
+                    key={item.id}
+                    draggable={!showResults}
+                    onDragStart={(e) => handleDragStart(e, item, index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`
+                      p-3 border rounded-lg shadow-sm
+                      flex items-center justify-between
+                      ${showResults 
+                        ? isCorrect(index)
+                          ? 'bg-green-100 border-green-300'
+                          : 'bg-red-100 border-red-300'
+                        : draggedOverIndex === index
+                          ? 'bg-blue-50 border-blue-300'
+                          : 'bg-white hover:bg-gray-50'
+                      }
+                      transition-colors
+                      ${!showResults && 'cursor-move'}
+                    `}
+                  >
+                    <span className="flex-grow">{item.antidote}</span>
+                    {!showResults && (
+                      <GripVertical className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Correct Answers */}
+        {showResults && showCorrectAnswers && (
+          <div className="p-6 bg-gray-50 border-t">
+            <h3 className="font-bold text-lg mb-4">Respuestas Correctas:</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {toxinsData.map((item, index) => (
+                <div key={index} className="p-2 border-b">
+                  <span className="font-semibold">{item.toxin}:</span>
+                  <br />
+                  <span className="text-green-600">{item.antidote}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ToxinsGame;
